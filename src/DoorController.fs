@@ -60,3 +60,20 @@ let handleDoorEvent (state: DoorState) (event: DoorEvent) : DoorState * AccessLo
     }
 
     newState, log
+
+
+/// Agent to process door events asynchronously
+/// <param name="initialState">Initial state of the door</param>
+/// <returns>MailboxProcessor instance</returns>
+let startDoorControllerAgent (initialState: DoorState) =
+    MailboxProcessor.Start(fun inbox ->
+        let rec loop state =
+            async {
+                let! event = inbox.Receive()
+                let newState, log = handleDoorEvent state event
+                // TODO: log the access log entry to a database or file
+                printfn "%A" log
+                return! loop newState
+            }
+        loop initialState
+    )
