@@ -1,3 +1,4 @@
+module DoorController
 open System
 open Domain
 

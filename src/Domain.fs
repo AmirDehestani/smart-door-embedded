@@ -1,3 +1,4 @@
+module Domain
 open System
 
 type DoorState =
