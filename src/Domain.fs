@@ -1,3 +1,5 @@
+open System
+
 type DoorState =
     | Open
     | ClosedUnlocked
@@ -9,8 +11,8 @@ type DoorEvent =
     | CloseDoor
 
 type AccessLog = {
-    UserId: string
-    Timestamp: System.DateTime
+    UserId: string option
+    Timestamp: DateTime
     Event: DoorEvent
     PreviousState: DoorState
     NewState: DoorState
