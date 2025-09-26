@@ -7,7 +7,10 @@ open TcpServer
 let main argv =
     let doorAgent = startDoorControllerAgent(ClosedLocked)
 
-    startTcpServer 9000 logStream.Publish 
+    startLogsTcpServer 9000 logStream.Publish 
+    |> Async.Start
+
+    startDoorStateTcpServer 9001 stateStream.Publish
     |> Async.Start
 
     printfn "Press any key to start simulating door events..."

@@ -4,6 +4,7 @@ open Domain
 
 /// Event stream for access logs
 let logStream = new Event<AccessLog>()
+let stateStream = new Event<DoorState>()
 
 /// Function to handle door events and state transitions
 /// <param name="state">Current state of the door</param>
@@ -76,6 +77,7 @@ let startDoorControllerAgent (initialState: DoorState) =
                 let! event = inbox.Receive()
                 let newState, log = handleDoorEvent state event
                 logStream.Trigger(log)
+                stateStream.Trigger(newState)
                 return! loop newState
             }
         loop initialState
