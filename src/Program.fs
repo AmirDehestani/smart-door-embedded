@@ -6,20 +6,27 @@ open DoorController
 let main argv =
     let doorAgent = startDoorControllerAgent(ClosedLocked)
 
+    let users = ["Amir"; "John"; "Alice"; "Jane"]
+    let random = Random()
+
     // Simulate some door events
-    doorAgent.Post(OpenDoor)
-    doorAgent.Post(SwipeCard("Amir"))
-    doorAgent.Post(OpenDoor)
-    doorAgent.Post(OpenDoor)
-    doorAgent.Post(CloseDoor)
-    doorAgent.Post(CloseDoor)
-    doorAgent.Post(OpenDoor)
-    doorAgent.Post(SwipeCard("John"))
-    doorAgent.Post(SwipeCard("Alice"))
-    doorAgent.Post(CloseDoor)
-    doorAgent.Post(OpenDoor)
-    doorAgent.Post(SwipeCard("Jane"))
-    doorAgent.Post(CloseDoor)
+    let simulateUserAction userId =
+        async {
+            for _ in 1 .. 5 do
+                do! Async.Sleep(random.Next(500, 2000))
+                let actionIndex = random.Next(3)
+                match actionIndex with
+                | 0 -> doorAgent.Post(SwipeCard userId)
+                | 1 -> doorAgent.Post(OpenDoor)
+                | 2 -> doorAgent.Post(CloseDoor)
+                | _ -> ()
+        }
+
+    users
+    |> List.map simulateUserAction
+    |> Async.Parallel
+    |> Async.RunSynchronously
+    |> ignore
 
     // Keep console open
     printfn "Press any key to exit..."

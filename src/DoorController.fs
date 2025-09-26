@@ -73,7 +73,7 @@ let startDoorControllerAgent (initialState: DoorState) =
                 let! event = inbox.Receive()
                 let newState, log = handleDoorEvent state event
                 // TODO: log the access log entry to a database or file
-                printfn "%A" log
+                printfn "%A\n" log
                 return! loop newState
             }
         loop initialState
