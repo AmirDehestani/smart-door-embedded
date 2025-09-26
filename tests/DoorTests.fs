@@ -2,6 +2,8 @@ module DomainTests
 
 open Expecto
 open Domain
+open DoorController
+open System
 
 [<Tests>]
 let tests =
@@ -103,4 +105,42 @@ let tests =
             let _, log = DoorController.handleDoorEvent initialState event
             Expect.isGreaterThan log.Timestamp System.DateTime.MinValue "Log should contain timestamp"
             Expect.equal log.Event event "Log should contain the event"
+
+        testCase "Concurrent door operations maintain consistency" <| fun _ ->
+            let doorAgent = DoorController.startDoorControllerAgent(ClosedLocked)
+            let users = ["Amir"; "John"; "Alice"; "Jane"]
+            let actionsCount = 5
+            let random = Random()
+            let logEvents = ResizeArray<AccessLog>()
+            let stateEvents = ResizeArray<DoorState>()
+
+
+            DoorController.logStream.Publish.Add(fun log -> logEvents.Add(log))
+            DoorController.stateStream.Publish.Add(fun state -> stateEvents.Add(state))
+
+            let simulateUserAction userId =
+                async {
+                    for _ in 1 .. actionsCount do
+                        do! Async.Sleep(random.Next(50, 200))
+                        let actionIndex = random.Next(3)
+                        match actionIndex with
+                        | 0 -> doorAgent.Post(SwipeCard userId)
+                        | 1 -> doorAgent.Post(OpenDoor)
+                        | 2 -> doorAgent.Post(CloseDoor)
+                        | _ -> ()
+                }
+
+            users
+            |> List.map simulateUserAction
+            |> Async.Parallel
+            |> Async.RunSynchronously
+            |> ignore
+
+            Expect.equal logEvents.Count (users.Length * actionsCount) "Should have logged all events"
+            Expect.equal stateEvents.Count (users.Length * actionsCount) "Should have recorded all state changes"
+            
+            for log in logEvents do
+                let expectedNewState, _ = DoorController.handleDoorEvent log.PreviousState log.Event
+                Expect.equal log.NewState expectedNewState "Each logged transition should be valid"
+                Expect.isGreaterThan log.Timestamp System.DateTime.MinValue "Each log should have a timestamp"
     ]
