@@ -2,6 +2,9 @@ module DoorController
 open System
 open Domain
 
+/// Event stream for access logs
+let logStream = new Event<AccessLog>()
+
 /// Function to handle door events and state transitions
 /// <param name="state">Current state of the door</param>
 /// <param name="event">Event to process</param>
@@ -72,8 +75,7 @@ let startDoorControllerAgent (initialState: DoorState) =
             async {
                 let! event = inbox.Receive()
                 let newState, log = handleDoorEvent state event
-                // TODO: log the access log entry to a database or file
-                printfn "%A\n" log
+                logStream.Trigger(log)
                 return! loop newState
             }
         loop initialState
