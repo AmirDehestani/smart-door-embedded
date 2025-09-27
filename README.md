@@ -8,7 +8,7 @@ The controller handles:
 - Access requests (card swipes)
 - Door lock/unlock states
 - Event logging
-- TCP communication with a client app
+- TCP communication with a [client app](https://github.com/AmirDehestani/smart-door-client)
 
 ## Features
 - Reactive, event-driven architecture using F# MailboxProcessor
